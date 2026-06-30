@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GifLightCutter – 影片片段切割工具</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">🎬 <strong>GifLightCutter</strong></div>
+      <div class="video-meta hidden" id="videoMeta">
+        <span id="videoFileName"></span>
+        <span class="sep">|</span>
+        <span id="videoDuration"></span>
+      </div>
+      <button class="btn btn-sm btn-outline hidden" id="changeVideoBtn">換一部影片</button>
+    </header>
+
+    <!-- Drop Zone (初始畫面) -->
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-inner">
+        <div class="drop-icon">🎞️</div>
+        <h2>拖曳影片至此</h2>
+        <p>或點擊下方按鈕選擇檔案</p>
+        <button class="btn btn-primary btn-lg" id="selectFileBtn">選擇影片</button>
+        <p class="hint">支援 MP4、WebM、MOV、MKV 等常見格式<br>檔案不會上傳至任何伺服器，完全在本機處理</p>
+      </div>
+      <input type="file" id="fileInput" accept="video/*" hidden>
+    </div>
+
+    <!-- 主編輯畫面 -->
+    <div class="editor hidden" id="editor">
+
+      <!-- 左欄：播放器 + 時間軸 -->
+      <div class="player-col">
+
+        <!-- 影片播放器 -->
+        <div class="video-wrap">
+          <video id="video" preload="metadata"></video>
+          <canvas id="cropCanvas" class="crop-canvas hidden"></canvas>
+        </div>
+
+        <!-- 傳輸控制列 -->
+        <div class="transport">
+          <button class="icon-btn" id="frameBackBtn" title="後退一幀 (←)">⏮</button>
+          <button class="icon-btn play-btn" id="playBtn" title="播放/暫停 (Space)">▶</button>
+          <button class="icon-btn" id="frameFwdBtn" title="前進一幀 (→)">⏭</button>
+          <span class="t-cur" id="tCur">0:00:00.000</span>
+          <span class="t-sep">/</span>
+          <span class="t-tot" id="tTot">0:00:00.000</span>
+          <div class="flex-spacer"></div>
+          <div class="preview-banner hidden" id="previewBanner"></div>
+          <button class="icon-btn stop-preview-btn hidden" id="stopPreviewBtn" title="停止預覽">⏹ 停止預覽</button>
+          <button class="icon-btn crop-btn" id="cropToggleBtn" title="框取輸出範圍 (C)">⊡ 框取</button>
+          <button class="icon-btn crop-clear-btn hidden" id="cropClearBtn" title="清除框取範圍">✕ 清除框取</button>
+          <label class="rate-label">
+            速度
+            <select id="rateSelect">
+              <option value="0.1">0.1×</option>
+              <option value="0.25">0.25×</option>
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- 時間軸 -->
+        <div class="timeline-outer" id="timelineOuter">
+          <div class="tl-ruler" id="tlRuler"></div>
+          <div class="tl-track" id="tlTrack">
+            <div class="tl-segs" id="tlSegs"></div>
+            <div class="tl-sel hidden" id="tlSel"></div>
+            <div class="tl-handle tl-handle-in hidden" id="tlIn">
+              <div class="handle-pip"></div>
+              <div class="handle-lbl">I</div>
+            </div>
+            <div class="tl-handle tl-handle-out hidden" id="tlOut">
+              <div class="handle-pip"></div>
+              <div class="handle-lbl">O</div>
+            </div>
+            <div class="tl-playhead" id="tlPlayhead">
+              <div class="playhead-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 起訖點控制列 -->
+        <div class="inout-bar">
+          <div class="io-group">
+            <button class="btn btn-sm btn-in" id="setInBtn">I 起點</button>
+            <input class="time-field" id="inField" type="text" placeholder="0:00:00.000">
+          </div>
+          <button class="btn btn-add" id="addSegBtn">＋ 加入片段</button>
+          <div class="io-group">
+            <button class="btn btn-sm btn-out" id="setOutBtn">O 終點</button>
+            <input class="time-field" id="outField" type="text" placeholder="0:00:00.000">
+          </div>
+        </div>
+
+        <!-- 鍵盤提示 -->
+        <div class="kbd-hints">
+          <kbd>Space</kbd>播放&ensp;
+          <kbd>I</kbd>起點&ensp;
+          <kbd>O</kbd>終點&ensp;
+          <kbd>C</kbd>框取&ensp;
+          <kbd>←</kbd><kbd>→</kbd>逐幀&ensp;
+          <kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd>±1秒&ensp;
+          <kbd>Enter</kbd>加入片段
+        </div>
+      </div>
+
+      <!-- 右欄：片段列表 + 匯出 -->
+      <div class="side-col">
+
+        <!-- 片段列表 -->
+        <div class="seg-panel">
+          <div class="seg-header">
+            <h3>片段列表 <span class="badge" id="segBadge">0</span></h3>
+            <button class="btn btn-sm" id="mergeBtn" disabled title="勾選兩個以上片段後可合併">合併選取</button>
+          </div>
+          <div class="seg-list" id="segList">
+            <div class="seg-empty">尚無片段<br><small>在時間軸標記起訖點後點擊「加入片段」</small></div>
+          </div>
+        </div>
+
+        <!-- 匯出面板 -->
+        <div class="export-panel">
+          <h3>匯出設定</h3>
+
+          <div class="export-form">
+            <div class="form-row">
+              <span class="form-lbl">格式</span>
+              <div class="radio-row">
+                <label><input type="radio" name="fmt" value="webp" checked> 動態 WebP</label>
+                <label><input type="radio" name="fmt" value="gif"> GIF</label>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="form-lbl" for="widthInput">輸出寬度 (px)</label>
+              <input class="form-input num-input" id="widthInput" type="number" value="480" min="100" max="2000" step="10">
+            </div>
+            <div class="form-row">
+              <label class="form-lbl" for="fpsInput">FPS</label>
+              <input class="form-input num-input" id="fpsInput" type="number" value="15" min="1" max="30">
+            </div>
+            <div class="form-row">
+              <label class="form-lbl" for="prefixInput">檔名前綴</label>
+              <input class="form-input" id="prefixInput" type="text" value="clip" placeholder="clip">
+            </div>
+          </div>
+
+          <!-- FFmpeg 載入狀態 -->
+          <div class="ffmpeg-row">
+            <div class="ffmpeg-status" id="ffmpegStatus" data-state="idle">
+              <span class="status-dot"></span>
+              <span class="status-text" id="ffmpegStatusText">ffmpeg.wasm 未載入</span>
+            </div>
+            <button class="btn btn-sm btn-warning" id="loadFfmpegBtn">載入</button>
+          </div>
+
+          <!-- 進度條 -->
+          <div class="export-progress hidden" id="exportProgress">
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div class="progress-lbl" id="progressLbl">準備中...</div>
+          </div>
+
+          <!-- 匯出按鈕 -->
+          <div class="export-actions">
+            <button class="btn btn-primary btn-block" id="exportBtn" disabled>批次匯出全部</button>
+          </div>
+
+          <!-- 下載選項（匯出完成後顯示） -->
+          <div class="download-actions hidden" id="downloadActions">
+            <p class="dl-ready">✅ 匯出完成！共 <span id="exportedCount">0</span> 個檔案</p>
+            <button class="btn btn-success btn-block" id="dlZipBtn">⬇ 下載全部 (ZIP)</button>
+            <button class="btn btn-outline btn-block" id="dlEachBtn">⬇ 逐一下載</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JSZip for zip export (crossorigin 讓 COEP 模式可載入此跨域腳本) -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" crossorigin="anonymous"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

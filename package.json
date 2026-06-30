@@ -1,0 +1,14 @@
+{
+  "name": "giflightcutter",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . -p 8080 --no-clipboard",
+    "start": "npx serve . -p 8080 --no-clipboard"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2"
+  }
+}
