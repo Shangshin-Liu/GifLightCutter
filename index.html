@@ -12,6 +12,10 @@
     <!-- Header -->
     <header class="app-header">
       <div class="logo">🎬 <strong>GifLightCutter</strong></div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="cutter" id="tabCutter">影片分段處理</button>
+        <button class="mode-tab" data-mode="webp" id="tabWebp">webp 轉檔大師</button>
+      </div>
       <div class="video-meta hidden" id="videoMeta">
         <span id="videoFileName"></span>
         <span class="sep">|</span>
@@ -185,6 +189,64 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== WebP 轉檔大師 ===== -->
+    <div class="webp-converter hidden" id="webpConverter">
+
+      <!-- 上傳區 -->
+      <div class="webp-drop-zone" id="webpDropZone">
+        <div class="webp-drop-inner">
+          <div class="drop-icon">🖼️</div>
+          <h2>拖曳圖片至此</h2>
+          <p>或點擊下方按鈕選擇圖片（可多選）</p>
+          <button class="btn btn-primary btn-lg" id="webpSelectBtn">選擇圖片</button>
+          <p class="hint">支援 PNG、JPG、BMP、GIF、TIFF 等常見格式<br>所有處理在本機完成，不上傳至伺服器</p>
+        </div>
+        <input type="file" id="webpFileInput" accept="image/*" multiple hidden>
+      </div>
+
+      <!-- 控制列 -->
+      <div class="webp-controls">
+        <div class="webp-ctrl-group">
+          <label class="form-lbl">寬 (px)</label>
+          <input class="form-input num-input" id="webpWidth" type="number" min="1" max="9999" placeholder="自動">
+        </div>
+        <span class="webp-ctrl-sep">×</span>
+        <div class="webp-ctrl-group">
+          <label class="form-lbl">高 (px)</label>
+          <input class="form-input num-input" id="webpHeight" type="number" min="1" max="9999" placeholder="自動">
+        </div>
+        <button class="btn btn-outline btn-sm" id="webpResizeBtn" disabled>調整尺寸</button>
+        <div class="flex-spacer"></div>
+        <button class="btn btn-primary" id="webpConvertBtn" disabled>輸出成 webp</button>
+        <button class="btn btn-outline btn-sm hidden" id="webpClearBtn">✕ 清除全部</button>
+      </div>
+
+      <!-- 進度條 -->
+      <div class="webp-progress hidden" id="webpProgressWrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="webpProgressFill" style="width:0%"></div>
+        </div>
+        <div class="progress-lbl" id="webpProgressLbl">準備中...</div>
+      </div>
+
+      <!-- 空提示 -->
+      <div class="webp-empty" id="webpEmpty">
+        <span>尚未上傳圖片</span>
+      </div>
+
+      <!-- 圖片卡片 Grid -->
+      <div class="webp-grid" id="webpGrid"></div>
+
+      <!-- 下載操作列 -->
+      <div class="webp-download-bar hidden" id="webpDownloadBar">
+        <span class="webp-dl-label">✅ 轉檔完成</span>
+        <button class="btn btn-success" id="webpDlZipBtn">⬇ 下載全部 (ZIP)</button>
+        <button class="btn btn-outline" id="webpDlEachBtn">⬇ 逐一下載</button>
+      </div>
+
+    </div>
+
   </div>
 
   <!-- JSZip for zip export (crossorigin 讓 COEP 模式可載入此跨域腳本) -->

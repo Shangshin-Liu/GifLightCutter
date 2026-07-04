@@ -3,6 +3,7 @@
  */
 import { Timeline } from './timeline.js';
 import { Exporter  } from './exporter.js';
+import { WebpConverter } from './webp-converter.js';
 
 /* ── 時間工具 ─────────────────────────────────────────────── */
 function formatTime(s) {
@@ -54,10 +55,46 @@ let previewHandler = null;  // timeupdate 監聽器
 const exporter = new Exporter();
 
 /* ── Init ────────────────────────────────────────────────── */
+let webpConverter = null;
+
 function init() {
+  setupModeTabs();
   setupDropZone(); setupFileInput(); setupVideoEvents();
   setupTransport(); setupCrop(); setupInOut();
   setupSegmentActions(); setupExport(); setupKeyboard();
+  webpConverter = new WebpConverter();
+}
+
+/* ── Mode Tabs ───────────────────────────────────────────── */
+function setupModeTabs() {
+  const tabs = document.querySelectorAll('.mode-tab');
+  const cutterEls = [$('dropZone'), $('editor')]; // 影片分段處理
+  const webpEl    = $('webpConverter');             // webp 轉檔大師
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const mode = tab.dataset.mode;
+      if (mode === 'cutter') {
+        webpEl.classList.add('hidden');
+        // 還原 cutter 原本的顯示狀態
+        const hasVideo = !!state.videoFile;
+        $('dropZone').classList.toggle('hidden', hasVideo);
+        $('editor').classList.toggle('hidden', !hasVideo);
+        // 顯示影片 meta
+        $('videoMeta').classList.toggle('hidden', !hasVideo);
+        $('changeVideoBtn').classList.toggle('hidden', !hasVideo);
+      } else {
+        // 隱藏 cutter 所有區塊
+        cutterEls.forEach((el) => el.classList.add('hidden'));
+        $('videoMeta').classList.add('hidden');
+        $('changeVideoBtn').classList.add('hidden');
+        webpEl.classList.remove('hidden');
+      }
+    });
+  });
 }
 
 /* ── Drop Zone ───────────────────────────────────────────── */
