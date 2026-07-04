@@ -46,6 +46,7 @@ export class WebpConverter {
     this.progressWrap = document.getElementById('webpProgressWrap');
     this.progressFill = document.getElementById('webpProgressFill');
     this.progressLbl  = document.getElementById('webpProgressLbl');
+    this.suffixInput  = document.getElementById('webpSuffix');
 
     this._bind();
   }
@@ -85,6 +86,9 @@ export class WebpConverter {
 
     /* 清除全部 */
     this.clearBtn.addEventListener('click', () => this._clearAll());
+
+    /* 後綴詞變更 → 即時更新卡片 */
+    this.suffixInput.addEventListener('input', () => this._renderCards());
   }
 
   /* ── 新增圖片 ─────────────────────────────────────────────── */
@@ -221,7 +225,7 @@ export class WebpConverter {
       if (!item.webpUrl) continue;
       const a = document.createElement('a');
       a.href = item.webpUrl;
-      a.download = `${baseName(item.name)}.webp`;
+      a.download = `${this._getOutputName(item)}.webp`;
       a.click();
     }
   }
@@ -231,7 +235,7 @@ export class WebpConverter {
     const zip = new JSZip();
     for (const item of this.items) {
       if (!item.webpBlob) continue;
-      zip.file(`${baseName(item.name)}.webp`, item.webpBlob);
+      zip.file(`${this._getOutputName(item)}.webp`, item.webpBlob);
     }
     const blob = await zip.generateAsync({ type: 'blob' });
     const a = document.createElement('a');
@@ -283,6 +287,12 @@ export class WebpConverter {
     }
   }
 
+  /** 取得套用後綴詞的輸出檔名（不含副檔名） */
+  _getOutputName(item) {
+    const suffix = this.suffixInput.value || '';
+    return baseName(item.name) + suffix;
+  }
+
   _createCard(item) {
     const card = document.createElement('div');
     card.className = 'webp-card';
@@ -297,10 +307,12 @@ export class WebpConverter {
     imgWrap.appendChild(img);
 
     /* 資訊 */
+    const outName = this._getOutputName(item);
+    const displayName = outName + '.' + getExt(item.name).toLowerCase();
     const info = document.createElement('div');
     info.className = 'webp-card-info';
     info.innerHTML = `
-      <div class="webp-card-name" title="${item.name}">${item.name}</div>
+      <div class="webp-card-name" title="${displayName}">${displayName}</div>
       <div class="webp-card-detail">
         <span>格式：${item.format}</span>
         <span>尺寸：${item.width} × ${item.height} px</span>
@@ -317,7 +329,7 @@ export class WebpConverter {
       const dlBtn = document.createElement('a');
       dlBtn.className = 'btn btn-sm btn-success';
       dlBtn.href = item.webpUrl;
-      dlBtn.download = `${baseName(item.name)}.webp`;
+      dlBtn.download = `${outName}.webp`;
       dlBtn.textContent = '⬇ 下載 WebP';
       actions.appendChild(dlBtn);
     }
